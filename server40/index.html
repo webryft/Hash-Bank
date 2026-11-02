@@ -1,1 +1,115 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>HashBank Admin</title><meta name="robots" content="noindex"><link rel="icon" href="icon-192.png">
+<style>
+:root{--bg:#060a12;--card:#0c1422;--line:#1a2638;--tx:#f2f5fa;--mu:#8b97ab;--lime:#a3e635;--g:#22c55e;--r:#ef4444;--o:#f59e0b}
+*{box-sizing:border-box;margin:0}body{font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--tx);min-height:100vh}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}svg.i{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.wrap{max-width:980px;margin:0 auto;padding:16px}.top{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--bg);z-index:5}
+.logo{width:36px;height:36px;border-radius:11px;background:var(--lime);color:#111;display:grid;place-items:center}.top b{font-size:17px}.top .sp{flex:1}.mu{color:var(--mu);font-size:13px}
+.tabs{display:flex;gap:6px;overflow-x:auto;padding:12px 16px;border-bottom:1px solid var(--line)}.tabs button{padding:8px 14px;border-radius:10px;color:var(--mu);white-space:nowrap;transition:background .15s}.tabs .on{background:var(--lime);color:#111;font-weight:600}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-top:12px}.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}.stats .card{margin:0}.stats b{font-size:26px;display:block}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.row.sp{justify-content:space-between}.pill{padding:3px 10px;border-radius:99px;font-size:12px;font-weight:600;background:#16202f}
+.s-active,.s-approved,.s-verified,.s-delivered{color:var(--g)}.s-pending,.s-paid_unverified,.s-new{color:var(--o)}.s-disabled,.s-initiated{color:var(--r)}
+.b{padding:8px 14px;border-radius:10px;background:#16202f;font-weight:600}.b:hover{background:#1e2c42}.b.l{background:var(--lime);color:#111}.b.d{color:var(--r)}.b:disabled{opacity:.5}
+input,select,textarea{background:#0a101c;border:1px solid var(--line);border-radius:10px;padding:11px;color:var(--tx);font:inherit;width:100%}input:focus,select:focus,textarea:focus{outline:2px solid var(--lime)}
+label{display:block;color:var(--mu);font-size:12px;margin:10px 0 4px}.g2{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+#auth{max-width:380px;margin:12vh auto;padding:0 16px}.err{color:var(--r);min-height:18px;margin-top:8px}.ok{color:var(--g)}
+.ov{position:fixed;inset:0;background:#000a;display:none;place-items:center;z-index:9}.ov.on{display:grid}.md{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:20px;width:min(440px,92vw);max-height:88vh;overflow:auto}
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#f2f2f2;color:#111;padding:10px 18px;border-radius:99px;font-weight:600;opacity:0;pointer-events:none;transition:opacity .25s;z-index:20}#toast.on{opacity:1}
+.hide{display:none}h3{margin-bottom:8px}.it{border-top:1px solid var(--line);padding:12px 0}.it:first-child{border:0}
+</style></head><body>
+<svg width="0" height="0" style="position:absolute"><defs><symbol id="bolt" viewBox="0 0 24 24"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></symbol><symbol id="out" viewBox="0 0 24 24"><path d="M10 4H5v16h5M15 8l4 4-4 4M19 12H9"/></symbol></defs></svg>
 
+<div id="auth"><div class="row" style="margin-bottom:18px"><div class="logo"><svg class="i"><use href="#bolt"/></svg></div><b style="font-size:20px">HashBank Admin</b></div>
+ <div class="card"><label>Admin email</label><input id="em" type="email" autocomplete="username">
+ <div id="step1"><button class="b l" id="next" style="width:100%;margin-top:14px">Continue</button></div>
+ <div id="step2" class="hide"><label id="plbl">Password</label><input id="pw" type="password" autocomplete="current-password"><div id="pw2w" class="hide"><label>Confirm password</label><input id="pw2" type="password" autocomplete="new-password"></div>
+ <button class="b l" id="go" style="width:100%;margin-top:14px">Log in</button><button class="b" id="reset" style="width:100%;margin-top:8px">Forgot password</button></div>
+ <div class="err" id="aerr"></div></div></div>
+
+<div id="main" class="hide">
+ <div class="top"><div class="logo"><svg class="i"><use href="#bolt"/></svg></div><b>HashBank Admin</b><span class="sp"></span><span class="mu" id="who"></span><button class="b" id="lo"><svg class="i"><use href="#out"/></svg></button></div>
+ <div class="tabs" id="tabs"></div><div class="wrap" id="body"></div></div>
+<div class="ov" id="ov"><div class="md" id="md"></div></div><div id="toast"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+firebase.initializeApp({apiKey:"AIzaSyBoNHkEWs978EEV5ue0HM_oVh9dvac14Os",authDomain:"hashbank-b56b4.firebaseapp.com",projectId:"hashbank-b56b4",storageBucket:"hashbank-b56b4.firebasestorage.app",messagingSenderId:"338061059772",appId:"1:338061059772:web:465bf19d612c221678d2b9"});
+const auth=firebase.auth(),db=firebase.firestore(),TS=firebase.firestore.FieldValue.serverTimestamp;
+const ADMINS=["maxwellfbisteven@gmail.com","aladdincharlotte@gmail.com"];
+const $=s=>document.querySelector(s),esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const ngn=n=>"₦"+Number(n||0).toLocaleString("en-NG");const fd=t=>t?.toDate?t.toDate().toLocaleString():"—";
+const toast=m=>{const t=$("#toast");t.textContent=m;t.classList.add("on");clearTimeout(t._);t._=setTimeout(()=>t.classList.remove("on"),2400)};
+const aerr=(m,ok)=>{const e=$("#aerr");e.textContent=m;e.className="err"+(ok?" ok":"")};
+let mode="login";
+/* AUTH: only the two admin emails; new accounts must verify their email before access */
+$("#next").onclick=async()=>{const e=$("#em").value.trim().toLowerCase();if(!ADMINS.includes(e))return aerr("This email is not an approved admin.");
+ try{const m=await auth.fetchSignInMethodsForEmail(e);mode=m.length?"login":"create"}catch(x){mode="login"}
+ $("#step1").classList.add("hide");$("#step2").classList.remove("hide");$("#em").readOnly=true;
+ $("#pw2w").classList.toggle("hide",mode==="login");$("#plbl").textContent=mode==="login"?"Password":"Create a password (min 8 characters)";$("#go").textContent=mode==="login"?"Log in":"Create account";aerr("")};
+$("#go").onclick=async()=>{const e=$("#em").value.trim().toLowerCase(),p=$("#pw").value;
+ try{if(mode==="create"){if(p.length<8||p!==$("#pw2").value)return aerr("Use at least 8 characters and confirm the password.");
+  const u=await auth.createUserWithEmailAndPassword(e,p);await u.user.sendEmailVerification();await auth.signOut();aerr("Account created. Verify your email from the link we sent, then log in.",1);mode="login";$("#pw2w").classList.add("hide");$("#go").textContent="Log in";return}
+  await auth.signInWithEmailAndPassword(e,p)}catch(x){aerr(x.code==="auth/email-already-in-use"?"Account exists. Log in instead.":"Could not sign in. Check your email and password.")}};
+$("#reset").onclick=()=>auth.sendPasswordResetEmail($("#em").value.trim()).then(()=>aerr("Password reset email sent.",1)).catch(()=>aerr("Could not send reset email."));
+$("#lo").onclick=()=>auth.signOut();
+auth.onAuthStateChanged(async u=>{
+ if(!u||!ADMINS.includes(u.email)){$("#main").classList.add("hide");$("#auth").classList.remove("hide");return}
+ if(!u.emailVerified){await u.sendEmailVerification().catch(()=>{});await auth.signOut();aerr("Verify your email first. We sent a new link.");return}
+ $("#auth").classList.add("hide");$("#main").classList.remove("hide");$("#who").textContent=u.email;boot()});
+
+/* DATA */
+const S={users:[],orders:[],ups:[],reqs:[],bc:[],cfg:{price:65000,shipping:10000}};let tab="overview",q="",subs=[],booted=0;
+function boot(){if(booted)return;booted=1;
+ const on=(ref,k,f)=>subs.push(ref.onSnapshot(s=>{S[k]=f?f(s):s.docs.map(d=>({id:d.id,...d.data()}));render()},e=>toast("Permission error: publish firestore.rules")));
+ on(db.collection("accounts").where("status","in",["pending","active","disabled"]),"users");
+ on(db.collection("orders").orderBy("createdAt","desc").limit(200),"orders");on(db.collection("upgrades").orderBy("createdAt","desc").limit(100),"ups");
+ on(db.collection("requests").orderBy("createdAt","desc").limit(100),"reqs");on(db.collection("broadcasts").orderBy("createdAt","desc").limit(50),"bc");
+ on(db.doc("settings/config"),"cfg",s=>s.exists?{price:65000,shipping:10000,...s.data()}:S.cfg)}
+const TABS=[["overview","Overview"],["users","Users"],["orders","Orders"],["ups","Upgrades"],["reqs","Requests"],["bc","Broadcast"],["cfg","Settings"],["codes","Codes"]];
+function render(){$("#tabs").innerHTML=TABS.map(([k,n])=>`<button data-t="${k}" class="${k===tab?"on":""}">${n}${k==="users"&&S.users.some(u=>u.status==="pending")?" •":""}</button>`).join("");
+ if(document.activeElement&&/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)&&tab!=="users")return;R[tab]()}
+$("#tabs").onclick=e=>{const b=e.target.closest("button");if(b){tab=b.dataset.t;render()}};
+const pill=s=>`<span class="pill s-${s}">${s}</span>`,body=h=>$("#body").innerHTML=h,empty=t=>`<p class="mu" style="padding:16px 0">${t}</p>`;
+const R={
+overview(){const u=S.users,paid=S.orders.filter(o=>["paid_unverified","verified","shipped","delivered"].includes(o.status));
+ body(`<div class="stats">${[["Users",u.length],["Pending approval",u.filter(x=>x.status==="pending").length],["Active",u.filter(x=>x.status==="active").length],["Disabled",u.filter(x=>x.status==="disabled").length],["Online orders",paid.length],["Order revenue",ngn(paid.reduce((a,o)=>a+(+o.amount||0),0))],["Upgrades",S.ups.filter(x=>x.status==="approved").length],["New requests",S.reqs.filter(r=>!r.done).length]].map(([a,b])=>`<div class="card"><span class="mu">${a}</span><b>${b}</b></div>`).join("")}</div>`)},
+users(){const l=S.users.filter(u=>(u.name+u.email+u.phone).toLowerCase().includes(q.toLowerCase()));
+ body(`<input id="q" placeholder="Search name, email or phone" value="${esc(q)}">${l.length?l.map(u=>`<div class="card"><div class="row sp"><div><b>${esc(u.name)}</b> ${pill(u.status)}<div class="mu">${esc(u.email)} · ${esc(u.phone)}</div><div class="mu">Registered ${fd(u.registeredAt)} · Mining since ${fd(u.activatedAt)}${u.upgradedAt?" · Upgraded "+fd(u.upgradedAt):""} · Spent ${ngn(u.spent)}</div></div>
+ <div class="row">${u.status==="pending"?`<button class="b l" data-a="approve" data-id="${u.id}">Approve</button>`:""}${u.status==="active"?`<button class="b" data-a="disable" data-id="${u.id}">Disable</button>`:""}${u.status==="disabled"?`<button class="b l" data-a="enable" data-id="${u.id}">Enable</button>`:""}<button class="b" data-a="edit" data-id="${u.id}">Edit</button><button class="b" data-a="reset" data-id="${u.id}">Reset PIN</button><button class="b d" data-a="del" data-id="${u.id}">Delete</button></div></div></div>`).join(""):empty("No users yet.")}`);
+ const i=$("#q");i.oninput=()=>{q=i.value;R.users();const n=$("#q");n.focus();n.setSelectionRange(q.length,q.length)}},
+orders(){body(S.orders.length?S.orders.map(o=>`<div class="card"><div class="row sp"><div><b>${esc(o.name)}</b> ${pill(o.status)} <span class="mu">${ngn(o.amount)}</span><div class="mu">${esc(o.phone)} · ${esc(o.email)}</div><div class="mu">${esc(o.address)}, ${esc(o.zip)} · Ref ${o.id} · ${fd(o.createdAt)}</div></div>
+ <select data-o="${o.id}" style="width:auto">${["initiated","paid_unverified","verified","shipped","delivered","cancelled"].map(s=>`<option ${s===o.status?"selected":""}>${s}</option>`).join("")}</select></div></div>`).join(""):empty("No orders yet."))},
+ups(){body(S.ups.length?S.ups.map(x=>`<div class="card row sp"><div>${pill(x.status)} <b>${ngn(x.amount)}</b><div class="mu">${esc(x.email)} · ${fd(x.createdAt)} · Ref ${x.id}</div></div>${x.status!=="approved"?`<button class="b l" data-a="upok" data-id="${x.id}" data-acc="${x.accountId}">Verify and approve</button>`:""}</div>`).join(""):empty("No upgrade payments yet."))},
+reqs(){body(S.reqs.length?S.reqs.map(r=>`<div class="card"><div class="row sp"><div>${pill(r.done?"approved":"new")} <b>${r.type==="faq"?"Question":"Forgot code"}</b> <span class="mu">${esc(r.email)} · ${fd(r.createdAt)}</span></div><div class="row">${r.done?"":`<button class="b" data-a="rdone" data-id="${r.id}">Mark done</button>`}<button class="b d" data-a="rdel" data-id="${r.id}">Delete</button></div></div><p style="margin-top:8px">${esc(r.message)}</p></div>`).join(""):empty("No requests."))},
+bc(){body(`<div class="card"><h3>Send notification</h3><label>Title</label><input id="bt"><label>Message</label><textarea id="bm" rows="3"></textarea><button class="b l" id="bs" style="margin-top:12px">Publish</button></div>${S.bc.map(b=>`<div class="card row sp"><div><b>${esc(b.title)}</b><div class="mu">${esc(b.message)}</div><div class="mu">${fd(b.createdAt)}</div></div><button class="b d" data-a="bdel" data-id="${b.id}">Delete</button></div>`).join("")}`);
+ $("#bs").onclick=()=>{const t=$("#bt").value.trim(),m=$("#bm").value.trim();if(!t||!m)return toast("Add a title and message");db.collection("broadcasts").add({title:t,message:m,createdAt:TS()}).then(()=>toast("Published"))}},
+cfg(){body(`<div class="card"><h3>Product pricing</h3><div class="g2"><div><label>Price (₦)</label><input id="pr" type="number" value="${S.cfg.price}"></div><div><label>Shipping (₦)</label><input id="sh" type="number" value="${S.cfg.shipping}"></div></div><p class="mu" style="margin-top:10px">Checkout total: <b id="tt">${ngn(+S.cfg.price+ +S.cfg.shipping)}</b></p><button class="b l" id="sv" style="margin-top:12px">Save</button></div>`);
+ $("#sv").onclick=()=>db.doc("settings/config").set({price:+$("#pr").value,shipping:+$("#sh").value},{merge:true}).then(()=>toast("Saved"))},
+codes(){body(`<div class="card"><h3>Activation codes</h3><p class="mu">Import <b>codes_hashed_for_import.json</b>. Only fingerprints are stored. Already-registered codes are never overwritten.</p><input type="file" id="f" accept=".json" style="margin-top:12px"><button class="b l" id="imp" style="margin-top:12px">Import</button><div class="mu" id="ist" style="margin-top:10px"></div><button class="b" id="cnt" style="margin-top:12px">Count unused codes</button></div>`);
+ $("#cnt").onclick=async()=>{$("#ist").textContent="Counting…";$("#ist").textContent=(await db.collection("accounts").where("status","==","unused").get()).size+" unused codes in the database"};
+ $("#imp").onclick=async()=>{const f=$("#f").files[0];if(!f)return toast("Choose the JSON file");let a;try{a=JSON.parse(await f.text())}catch(x){return toast("Invalid file")}
+  $("#imp").disabled=true;let n=0;try{const ex=new Set((await db.collection("accounts").get()).docs.map(d=>d.id));a=a.filter(c=>!ex.has(c.id));
+  for(let i=0;i<a.length;i+=400){const b=db.batch();a.slice(i,i+400).forEach(c=>b.set(db.collection("accounts").doc(c.id),{status:"unused"}));await b.commit();n+=Math.min(400,a.length-i);$("#ist").textContent="Imported "+n+" of "+a.length}
+  $("#ist").textContent="Done. "+n+" new codes imported."}catch(x){$("#ist").textContent="Import failed: "+x.message}$("#imp").disabled=false}}};
+/* ACTIONS */
+const modal=h=>{$("#md").innerHTML=h;$("#ov").classList.add("on")},closeM=()=>$("#ov").classList.remove("on");
+$("#ov").onclick=e=>{if(e.target.id==="ov"||e.target.closest("[data-x]"))closeM()};
+const acc=id=>db.collection("accounts").doc(id);
+document.addEventListener("change",e=>{const o=e.target.dataset?.o;if(o)db.collection("orders").doc(o).update({status:e.target.value}).then(()=>toast("Order updated"))});
+document.addEventListener("click",async e=>{const b=e.target.closest("[data-a]");if(!b)return;const a=b.dataset.a,id=b.dataset.id,u=S.users.find(x=>x.id===id);
+ try{if(a==="approve"){if(confirm("Approve "+u.name+"? Mining starts now.")){await acc(id).update({status:"active",activatedAt:TS(),spent:0,plan:"v1"});toast("Approved. Mining started.")}}
+ else if(a==="disable"){await acc(id).update({status:"disabled"});toast("Disabled")}
+ else if(a==="enable"){await acc(id).update({status:u.activatedAt?"active":"pending"});toast("Enabled")}
+ else if(a==="reset"){if(confirm("Reset PIN and send "+u.name+" back to registration? Mining history is cleared.")){await acc(id).set({status:"unused"});toast("Reset. The code is unused again.")}}
+ else if(a==="del"){if(confirm("Delete "+u.name+" permanently? The code will also stop working.")){await acc(id).delete();toast("Deleted")}}
+ else if(a==="edit")modal(`<h3>Edit user</h3><label>Name</label><input id="en" value="${esc(u.name)}"><label>Email</label><input id="ee" value="${esc(u.email)}"><label>Phone</label><input id="ep" value="${esc(u.phone)}"><label>Amount spent (₦)</label><input id="es" type="number" value="${u.spent||0}"><div class="row" style="margin-top:16px;justify-content:flex-end"><button class="b" data-x>Cancel</button><button class="b l" id="esv">Save</button></div>`)||($("#esv").onclick=async()=>{await acc(id).update({name:$("#en").value.trim(),email:$("#ee").value.trim(),phone:$("#ep").value.trim(),spent:+$("#es").value||0});closeM();toast("Saved")});
+ else if(a==="upok"){if(confirm("Confirm in Paystack that this payment is real, then approve?")){await acc(b.dataset.acc).update({upgradedAt:TS(),plan:"v2"});await db.collection("upgrades").doc(id).update({status:"approved"});toast("Upgrade approved")}}
+ else if(a==="rdone")await db.collection("requests").doc(id).update({done:true});
+ else if(a==="rdel"){if(confirm("Delete request?"))await db.collection("requests").doc(id).delete()}
+ else if(a==="bdel"){if(confirm("Delete notification?"))await db.collection("broadcasts").doc(id).delete()}}
+ catch(x){toast("Failed: "+x.message)}});
+</script></body></html>
