@@ -1,252 +1,210 @@
-<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Download</title>
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>HashBank</title><meta name="theme-color" content="#060a12">
+<link rel="manifest" href="manifest.json"><link rel="icon" href="icon-192.png">
 <style>
-  :root{
-    --bg:#000000;
-    --panel:#0d0d0f;
-    --line:rgba(255,255,255,0.08);
-    --text:#f5f5f7;
-    --muted:#8b8b92;
-    --grad: linear-gradient(120deg,#7c5cff,#22d3ee);
-    --ease: cubic-bezier(.4,0,.2,1);
-  }
-  *{box-sizing:border-box}
-  html,body{
-    margin:0;padding:0;height:100%;background:var(--bg);color:var(--text);
-    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;
-    overflow:hidden;
-  }
-  .page{
-    position:relative;
-    min-height:100vh;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    padding:24px;
-  }
-
-  /* subtle ambient glow */
-  .glow{
-    position:fixed;inset:0;pointer-events:none;
-    background:
-      radial-gradient(60% 50% at 50% 30%, rgba(124,92,255,.10), transparent 60%),
-      radial-gradient(50% 40% at 60% 80%, rgba(34,211,238,.08), transparent 60%);
-  }
-
-  /* download card */
-  .card{
-    position:relative;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    gap:22px;
-    cursor:pointer;
-    background:none;
-    border:none;
-    padding:0;
-    animation:fadeUp .6s var(--ease) both;
-  }
-  @keyframes fadeUp{
-    from{opacity:0;transform:translateY(14px)}
-    to{opacity:1;transform:none}
-  }
-
-  .image-wrap{
-    width:180px;height:180px;
-    border-radius:28px;
-    overflow:hidden;
-    background:var(--panel);
-    border:1px solid var(--line);
-    display:flex;align-items:center;justify-content:center;
-    transition:transform .28s var(--ease), border-color .28s var(--ease), box-shadow .28s var(--ease);
-    box-shadow:0 20px 60px rgba(0,0,0,.55);
-  }
-  .card:hover .image-wrap{
-    transform:translateY(-4px) scale(1.02);
-    border-color:rgba(255,255,255,.2);
-    box-shadow:0 26px 70px rgba(124,92,255,.18);
-  }
-  .card:active .image-wrap{ transform:scale(.97); }
-  .image-wrap img{
-    width:100%;height:100%;object-fit:cover;display:block;
-  }
-  .image-wrap .fallback-icon{ color:var(--muted); display:none; }
-  .image-wrap .fallback-icon svg{ width:56px;height:56px; }
-
-  .title-row{
-    display:flex;
-    align-items:center;
-    gap:10px;
-  }
-  .title-row svg{
-    width:22px;height:22px;
-    color:transparent;
-    background:var(--grad);
-    -webkit-mask: var(--mask, none) center / contain no-repeat;
-  }
-  .title{
-    font-size:22px;
-    font-weight:700;
-    letter-spacing:-.01em;
-  }
-  .subtitle{
-    font-size:13px;
-    color:var(--muted);
-    margin-top:-10px;
-    text-align:center;
-  }
-
-  .dl-icon{ width:22px;height:22px; }
-  .dl-icon svg{ width:100%;height:100%; }
-  .dl-icon .grad-stop-a{ stop-color:#7c5cff }
-  .dl-icon .grad-stop-b{ stop-color:#22d3ee }
-
-  /* invisible trigger button, top-left corner */
-  .hidden-trigger{
-    position:fixed;
-    top:0;left:0;
-    width:46px;height:46px;
-    background:transparent;
-    border:none;
-    z-index:50;
-    cursor:default;
-    padding:0;
-    opacity:0;
-  }
-
-  /* loading overlay */
-  .overlay{
-    position:fixed;inset:0;
-    background:rgba(0,0,0,.86);
-    backdrop-filter:blur(10px);
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    z-index:200;
-    opacity:0;
-    pointer-events:none;
-    transition:opacity .35s var(--ease);
-  }
-  .overlay.show{ opacity:1; pointer-events:auto; }
-  .overlay-inner{
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    gap:18px;
-    transform:translateY(10px);
-    opacity:0;
-    transition:transform .4s var(--ease), opacity .4s var(--ease);
-  }
-  .overlay.show .overlay-inner{ transform:none; opacity:1; }
-
-  .ring-wrap{
-    width:64px;height:64px;
-    position:relative;
-  }
-  .ring{
-    position:absolute;inset:0;
-    border-radius:50%;
-    border:3px solid rgba(255,255,255,.1);
-    border-top-color:#7c5cff;
-    border-right-color:#22d3ee;
-    animation:spin .9s linear infinite;
-  }
-  @keyframes spin{ to{ transform:rotate(360deg);} }
-
-  .overlay-label{
-    font-size:14px;
-    color:var(--muted);
-    letter-spacing:.02em;
-  }
-
-  .hidden{ display:none !important; }
-</style>
-</head>
-<body>
-
-<!-- ============================================================
-     CONFIG — edit these two links if they ever change
-     ============================================================ -->
-<script>
-  const DOWNLOAD_URL = "https://drive.google.com/file/d/1ahspqC3cAinDGHgx4MlVTEpibtPnkpnr/view?usp=drivesdk";
-  const SECRET_URL   = "https://flow.google.com/";
-  const SECRET_CLICKS_REQUIRED = 50;
-</script>
-
-<div class="glow"></div>
-
-<div class="page">
-  <button class="card" id="downloadCard" aria-label="Download">
-    <div class="image-wrap">
-      <img src="image.png" alt="" id="cardImg" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
-      <div class="fallback-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
-          <rect x="3" y="3" width="18" height="18" rx="4"/>
-          <circle cx="9" cy="9" r="1.6"/>
-          <path d="M21 15l-5.5-5.5L5 20"/>
-        </svg>
-      </div>
-    </div>
-    <div class="title-row">
-      <span class="dl-icon">
-        <svg viewBox="0 0 24 24" fill="none">
-          <defs>
-            <linearGradient id="dlGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" class="grad-stop-a"/>
-              <stop offset="100%" class="grad-stop-b"/>
-            </linearGradient>
-          </defs>
-          <path d="M12 3v13m0 0-4.5-4.5M12 16l4.5-4.5" stroke="url(#dlGrad)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M4 19h16" stroke="url(#dlGrad)" stroke-width="2.2" stroke-linecap="round"/>
-        </svg>
-      </span>
-      <span class="title">Download</span>
-    </div>
-    <div class="subtitle">Tap to get the file</div>
-  </button>
+:root{--bg:#060a12;--card:#0c1422;--line:#1a2638;--tx:#f2f5fa;--mu:#8b97ab;--lime:#a3e635;--g:#22c55e;--b:#2563eb;--o:#f97316;--r:#ef4444}
+*{box-sizing:border-box;margin:0}html,body{background:#000}
+body{font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--tx);min-height:100vh;display:flex;justify-content:center}
+#app{width:100%;max-width:460px;min-height:100vh;background:var(--bg);position:relative;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+svg.i{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+.view{display:none;padding:20px 20px 96px}.view.on{display:block}
+.btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:15px;border-radius:99px;font-weight:600;transition:transform .15s,opacity .15s}
+.btn:active{transform:scale(.97)}.btn:disabled{opacity:.5}
+.w{background:#f2f2f2;color:#111}.o{border:1px solid var(--line);margin-top:12px}.l{background:var(--lime);color:#0b1200}
+.top{display:flex;align-items:center;gap:12px}.logo{width:46px;height:46px;border-radius:14px;background:var(--lime);color:#111;display:grid;place-items:center}
+.top b{font-size:20px;display:block}.top small{color:var(--mu);letter-spacing:.06em}.badge{margin-left:auto;background:#0a2a14;color:var(--g);padding:5px 12px;border-radius:99px;font-size:12px;font-weight:600}
+.hero{margin:20px 0;border-radius:22px;background:#161a20;aspect-ratio:1/.8;display:grid;place-items:center;overflow:hidden}.hero img{max-width:100%;max-height:100%}
+.c{text-align:center}.eyebrow{color:var(--lime);font-weight:600;margin-top:6px}
+h1{font-size:32px;line-height:1.25;margin:12px 0}h1 span{color:var(--lime);display:block}.c p{color:var(--mu);margin-bottom:24px}
+.feat{display:flex;justify-content:space-between;border-top:1px solid var(--line);margin-top:28px;padding-top:22px;text-align:center;font-size:13px;gap:8px}.feat div{flex:1;display:grid;justify-items:center;gap:8px}.feat svg{color:var(--lime)}
+.foot{color:var(--mu);text-align:center;font-size:12px;margin-top:22px}
+.hd{display:flex;align-items:flex-start;gap:10px}.hd>div{flex:1}.hd small{color:var(--mu)}.hd h2{font-size:30px}.ib{width:42px;height:42px;border-radius:14px;display:grid;place-items:center;position:relative}.ib:active{background:var(--card)}
+.dot{position:absolute;top:6px;right:6px;min-width:16px;height:16px;border-radius:9px;background:var(--r);font-size:10px;display:none;place-items:center}
+.card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:18px;margin-top:14px}
+.bal small{color:var(--lime);font-weight:600}.bal h3{font-size:36px;color:var(--lime);margin:4px 0}.bal p{color:var(--mu)}.up{color:var(--g);margin-top:8px;font-weight:600}
+.act{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}.act button{border-radius:16px;padding:16px 6px;font-weight:600;font-size:13px;display:grid;justify-items:center;gap:6px}
+.a1{background:linear-gradient(#16a34a,#15803d)}.a2{background:linear-gradient(#2563eb,#1d4ed8)}.a3{background:linear-gradient(#f97316,#ea580c)}
+.row{display:flex;justify-content:space-between;align-items:center;gap:10px}.tabs{display:flex;gap:4px}.tabs button{padding:6px 10px;border-radius:10px;color:var(--mu);font-size:13px}.tabs .on{background:var(--lime);color:#111;font-weight:600}
+canvas{width:100%;height:170px;display:block;margin-top:10px}.mu{color:var(--mu);font-size:13px}.big{font-size:22px;font-weight:700}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}.grid2 div{background:#0a101c;border-radius:14px;padding:12px}
+.bar{height:10px;background:#16202f;border-radius:9px;overflow:hidden;margin:10px 0}.bar i{display:block;height:100%;background:var(--lime);width:0;transition:width .9s linear}
+.nav{position:fixed;bottom:0;width:100%;max-width:460px;display:none;justify-content:space-around;background:#0a101c;border-top:1px solid var(--line);padding:8px 0 calc(8px + env(safe-area-inset-bottom))}
+.nav.on{display:flex}.nav button{display:grid;justify-items:center;gap:3px;font-size:12px;color:var(--mu);padding:4px 24px}.nav .on{color:var(--lime)}
+.ov{position:fixed;inset:0;background:#000a;display:none;align-items:flex-end;justify-content:center;z-index:9;opacity:0;transition:opacity .2s}
+.ov.on{display:flex;opacity:1}.sh{width:100%;max-width:460px;max-height:88vh;overflow:auto;background:var(--card);border-radius:24px 24px 0 0;padding:22px 20px calc(22px + env(safe-area-inset-bottom));transform:translateY(30px);transition:transform .25s}.ov.on .sh{transform:none}
+.sh h3{font-size:20px;margin-bottom:14px}label{display:block;font-size:13px;color:var(--mu);margin:12px 0 5px}
+input,select,textarea{width:100%;background:#0a101c;border:1px solid var(--line);border-radius:12px;padding:13px;color:var(--tx);font:inherit}input:focus,select:focus,textarea:focus{outline:2px solid var(--lime);outline-offset:0}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px}.pair .btn{margin:0}.err{color:var(--r);font-size:13px;min-height:18px;margin-top:8px}.ok{color:var(--g)}
+.sum{background:#0a101c;border-radius:12px;padding:12px;margin-top:14px}.sum .row{padding:3px 0}.sum .t{border-top:1px solid var(--line);margin-top:6px;padding-top:8px;font-weight:700}
+.mi{display:flex;gap:12px;align-items:center;padding:14px 4px;width:100%;text-align:left;border-bottom:1px solid var(--line)}details{border-bottom:1px solid var(--line);padding:12px 2px}summary{font-weight:600;cursor:pointer}details p{color:var(--mu);margin-top:6px}
+#toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#f2f2f2;color:#111;padding:11px 18px;border-radius:99px;font-weight:600;opacity:0;pointer-events:none;transition:opacity .25s;z-index:20;max-width:90%}#toast.on{opacity:1}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style></head><body>
+<svg width="0" height="0" style="position:absolute"><defs>
+<symbol id="bolt" viewBox="0 0 24 24"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></symbol>
+<symbol id="bag" viewBox="0 0 24 24"><path d="M6 8h12l1 12H5zM9 8a3 3 0 0 1 6 0"/></symbol>
+<symbol id="key" viewBox="0 0 24 24"><circle cx="8" cy="15" r="4"/><path d="m11 12 8-8m-3 3 3 3"/></symbol>
+<symbol id="batt" viewBox="0 0 24 24"><rect x="2" y="7" width="17" height="10" rx="2"/><path d="M22 11v2M9 9l-2 3h4l-2 3"/></symbol>
+<symbol id="chip" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/><rect x="10" y="10" width="4" height="4"/><path d="M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4"/></symbol>
+<symbol id="shield" viewBox="0 0 24 24"><path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"/><path d="m9 12 2 2 4-4"/></symbol>
+<symbol id="bell" viewBox="0 0 24 24"><path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4zM10 21h4"/></symbol>
+<symbol id="menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
+<symbol id="phone" viewBox="0 0 24 24"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></symbol>
+<symbol id="wifi" viewBox="0 0 24 24"><path d="M2 9a15 15 0 0 1 20 0M5 12.5a10 10 0 0 1 14 0M8.500 16a5 5 0 0 1 7 0M12 19.500h.01"/></symbol>
+<symbol id="btc" viewBox="0 0 24 24"><path d="M8 4v16M8 5h5a3.500 3.500 0 0 1 0 7H8m5 0a3.500 3.500 0 0 1 0 7H8M11 2v3M11 19v3"/></symbol>
+<symbol id="home" viewBox="0 0 24 24"><path d="m3 11 9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></symbol>
+<symbol id="pick" viewBox="0 0 24 24"><path d="m14 10-9 9M13 4c4-1 7 1 8 5-3-3-6-3-8-1M9 8c-1-3 1-5 4-4"/></symbol>
+<symbol id="wal" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="14" rx="3"/><path d="M3 10V7a2 2 0 0 1 2-2h11M16 14h2"/></symbol>
+<symbol id="user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></symbol>
+<symbol id="info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.500h.01"/></symbol>
+<symbol id="help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.500 9.500a2.500 2.500 0 1 1 3.500 2.300c-.7.400-1 .9-1 1.700M12 17h.01"/></symbol>
+<symbol id="out" viewBox="0 0 24 24"><path d="M10 4H5v16h5M15 8l4 4-4 4M19 12H9"/></symbol>
+<symbol id="swap" viewBox="0 0 24 24"><path d="M4 8h14l-3-3M20 16H6l3 3"/></symbol>
+<symbol id="x" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></symbol>
+</defs></svg>
+<div id="app">
+<!-- LANDING -->
+<section class="view on" id="v-land">
+ <div class="top"><div class="logo"><svg class="i"><use href="#bolt"/></svg></div><div><b>HASHBANK</b><small>POWER. MINE. EARN.</small></div><span class="badge">OFFICIAL</span></div>
+ <div class="hero"><img src="product.png" alt="HashBank power bank" onerror="this.remove()"></div>
+ <div class="c"><div class="eyebrow">THE FUTURE OF PORTABLE POWER</div><h1>Power Your Phone.<span>Mine Your Future.</span></h1><p>Your everyday power bank, reimagined for the world of Bitcoin mining.</p></div>
+ <button class="btn w" id="orderBtn"><svg class="i"><use href="#bag"/></svg>Order HashBank Online</button>
+ <button class="btn o" id="loginBtn"><svg class="i"><use href="#key"/></svg>Login with Your Activation Code</button>
+ <div class="feat"><div><svg class="i"><use href="#batt"/></svg>Portable Power</div><div><svg class="i"><use href="#chip"/></svg>Mining Technology</div><div><svg class="i"><use href="#shield"/></svg>Activation Access</div></div>
+ <div class="foot">© 2026 HASHBANK · POWERING A DIGITAL FUTURE</div>
+</section>
+<!-- DASHBOARD -->
+<section class="view" id="v-dash">
+ <div class="hd"><div><small id="greet"></small><h2 id="uname"></h2><small>Your mining journey is on track. Keep going!</small></div>
+  <button class="ib" id="bellBtn" aria-label="Notifications"><svg class="i"><use href="#bell"/></svg><span class="dot" id="dot"></span></button>
+  <button class="ib" id="menuBtn" aria-label="Menu"><svg class="i"><use href="#menu"/></svg></button></div>
+ <div class="card bal"><small>Mining Balance</small><h3 id="bal">₦0.00</h3><p id="btc">≈ 0.00000000 BTC</p><div class="up" id="today">+₦0.00 (Today)</div></div>
+ <div id="banner"></div>
+ <div class="act"><button class="a1" data-buy="airtime"><svg class="i"><use href="#phone"/></svg>Buy Airtime</button><button class="a2" data-buy="data"><svg class="i"><use href="#wifi"/></svg>Buy Data</button><button class="a3" data-buy="crypto"><svg class="i"><use href="#btc"/></svg>Buy Bitcoin</button></div>
+ <div class="card"><div class="row"><div><b>BTC / NGN</b><div class="mu">Live price</div></div><div class="tabs" id="rng"><button class="on" data-d="1">1D</button><button data-d="7">1W</button><button data-d="30">1M</button><button data-d="90">3M</button><button data-d="365">1Y</button></div></div>
+  <div class="row" style="margin-top:8px;justify-content:flex-start"><span class="big" id="px">—</span><span class="up" id="chg" style="margin:0"></span></div><canvas id="cv"></canvas><div class="mu" id="pxnote"></div></div>
+ <div class="card" id="mining"><b>Mining Performance</b>
+  <div class="grid2"><div><div class="mu">Target hash power</div><div class="big">10 TH/s</div></div><div><div class="mu">Daily credit</div><div class="big" id="rate">₦500</div></div></div>
+  <div class="grid2"><div><div class="mu">Status</div><div id="stat">—</div></div><div><div class="mu">Credited so far</div><div id="earned">—</div></div></div></div>
+ <div class="card"><b>Your Mining Device</b><div class="row" style="margin-top:12px;align-items:center"><img src="product.png" alt="" style="width:64px;border-radius:12px" onerror="this.remove()"><div style="flex:1"><div class="mu">Mining rewards progress (24h)</div><div class="bar"><i id="pbar"></i></div><div class="mu" id="pnote"></div></div><b id="ppct">0%</b></div></div>
+</section>
+<nav class="nav" id="nav"><button class="on" data-t="home"><svg class="i"><use href="#home"/></svg>Home</button><button data-t="mining"><svg class="i"><use href="#pick"/></svg>Mining</button><button data-t="wallet"><svg class="i"><use href="#wal"/></svg>Wallet</button></nav>
 </div>
-
-<!-- invisible easter-egg trigger, top-left corner -->
-<button class="hidden-trigger" id="secretTrigger" aria-hidden="true" tabindex="-1"></button>
-
-<!-- loading overlay -->
-<div class="overlay" id="overlay">
-  <div class="overlay-inner">
-    <div class="ring-wrap"><div class="ring"></div></div>
-    <div class="overlay-label" id="overlayLabel">Redirecting…</div>
-  </div>
-</div>
-
+<div class="ov" id="ov"><div class="sh" id="sh"></div></div><div id="toast"></div>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://js.paystack.co/v1/inline.js"></script>
 <script>
-  /* main download action */
-  document.getElementById('downloadCard').addEventListener('click', ()=>{
-    window.location.href = DOWNLOAD_URL;
-  });
+const FB={apiKey:"AIzaSyBoNHkEWs978EEV5ue0HM_oVh9dvac14Os",authDomain:"hashbank-b56b4.firebaseapp.com",projectId:"hashbank-b56b4",storageBucket:"hashbank-b56b4.firebasestorage.app",messagingSenderId:"338061059772",appId:"1:338061059772:web:465bf19d612c221678d2b9"};
+const PAYSTACK_PK="pk_live_4ff37d15381d1d12c78fd66f7bc86beb64c59415";
+// Server endpoint (Cloud Function) that holds the Peyflex token. Leave "" until deployed; purchases stay disabled.
+const API_BASE="";
+firebase.initializeApp(FB);const db=firebase.firestore(),TS=firebase.firestore.FieldValue.serverTimestamp;
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)],D=864e5;
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const sha=async t=>[...new Uint8Array(await crypto.subtle.digest("SHA-256",new TextEncoder().encode(t)))].map(b=>b.toString(16).padStart(2,"0")).join("");
+const ngn=n=>"₦"+Number(n).toLocaleString("en-NG",{minimumFractionDigits:2,maximumFractionDigits:2});
+const toast=m=>{const t=$("#toast");t.textContent=m;t.classList.add("on");clearTimeout(t._);t._=setTimeout(()=>t.classList.remove("on"),2600)};
+let id=null,acct=null,unsub=null,btcNgn=0,bcast=[],cfg={price:65000,shipping:10000};
+function sheet(html){$("#sh").innerHTML=html;$("#ov").classList.add("on")}
+function closeSheet(){$("#ov").classList.remove("on")}
+$("#ov").addEventListener("click",e=>{if(e.target.id==="ov"||e.target.closest("[data-x]"))closeSheet()});
+const msg=(t,ok)=>{const e=$("#err");if(e){e.textContent=t;e.className="err"+(ok?" ok":"")}};
+db.doc("settings/config").get().then(s=>{if(s.exists)cfg={...cfg,...s.data()}}).catch(()=>{});
 
-  /* hidden 50-click trigger */
-  let secretCount = 0;
-  const overlay = document.getElementById('overlay');
-  const overlayLabel = document.getElementById('overlayLabel');
+/* ORDER */
+$("#orderBtn").onclick=()=>{const tot=+cfg.price+ +cfg.shipping;
+sheet(`<h3>Order HashBank</h3><label>Full name</label><input id="n" autocomplete="name"><label>Email (for your receipt)</label><input id="e" type="email" autocomplete="email"><label>Phone number</label><input id="p" type="tel" autocomplete="tel" placeholder="080..."><label>Delivery address</label><input id="a" autocomplete="street-address"><label>Zip code</label><input id="z" inputmode="numeric">
+<div class="sum"><div class="row"><span>HashBank</span><span>${ngn(cfg.price)}</span></div><div class="row"><span>Shipping</span><span>${ngn(cfg.shipping)}</span></div><div class="row t" style="border-top:1px solid var(--line);margin-top:6px;padding-top:8px;font-weight:700"><span>Total</span><span>${ngn(tot)}</span></div></div>
+<div class="err" id="err"></div><div class="pair"><button class="btn o" data-x>Cancel</button><button class="btn l" id="pay">Buy now</button></div>`);
+$("#pay").onclick=()=>{const v=k=>$("#"+k).value.trim(),o={name:v("n"),email:v("e"),phone:v("p"),address:v("a"),zip:v("z")};
+if(!o.name||!/^\S+@\S+\.\S+$/.test(o.email)||!/^\+?\d{10,14}$/.test(o.phone)||!o.address||!o.zip)return msg("Fill every field. Use a valid email and an 11-digit phone number.");
+const ref="HB"+Date.now()+Math.floor(Math.random()*1e4);$("#pay").disabled=true;
+db.collection("orders").doc(ref).set({...o,amount:tot,status:"initiated",createdAt:TS()}).then(()=>{
+PaystackPop.setup({key:PAYSTACK_PK,email:o.email,amount:tot*100,currency:"NGN",ref,metadata:{name:o.name,phone:o.phone},
+callback:r=>{db.collection("orders").doc(ref).update({status:"paid_unverified",paystackRef:r.reference}).catch(()=>{});sheet(`<h3>Payment received</h3><p class="mu">Order <b>${ref}</b>. We will contact you on ${esc(o.phone)} to confirm delivery. Your activation code is inside the box.</p><button class="btn l" data-x style="margin-top:16px">Done</button>`)},
+onClose:()=>{$("#pay").disabled=false;msg("Payment not completed. You can try again.")}}).openIframe()}).catch(()=>{$("#pay").disabled=false;msg("Could not start checkout. Check your connection and try again.")})}};
 
-  document.getElementById('secretTrigger').addEventListener('click', ()=>{
-    secretCount++;
-    if(secretCount >= SECRET_CLICKS_REQUIRED){
-      overlay.classList.add('show');
-      let dots = 0;
-      const iv = setInterval(()=>{
-        dots = (dots + 1) % 4;
-        overlayLabel.textContent = 'Redirecting' + '.'.repeat(dots);
-      }, 350);
-      setTimeout(()=>{
-        clearInterval(iv);
-        window.location.href = SECRET_URL;
-      }, 1600);
-    }
-  });
-</script>
-</body>
-</html>
+/* LOGIN */
+$("#loginBtn").onclick=()=>sheet(`<h3>Activation code</h3><label>Enter the 10-character code under the scratch layer</label><input id="cd" maxlength="10" autocomplete="off" autocapitalize="off" spellcheck="false"><div class="err" id="err"></div><div class="pair"><button class="btn o" data-x>Cancel</button><button class="btn l" id="go">Continue</button></div><button class="mi" id="fg" style="margin-top:8px;border:0"><svg class="i"><use href="#help"/></svg>Forgot code</button>`);
+document.addEventListener("click",async e=>{
+ if(e.target.closest("#fg"))return forgot();
+ if(!e.target.closest("#go"))return;const c=$("#cd").value.trim();if(c.length!==10)return msg("Codes have exactly 10 characters.");
+ $("#go").disabled=true;try{id=await sha(c);const s=await db.collection("accounts").doc(id).get();$("#go").disabled=false;
+ if(!s.exists)return msg("Code not found. Check each character, including symbols.");const a=s.data();
+ if(a.status==="disabled")return msg("This code is disabled. Contact support.");
+ if(a.status==="pending")return msg("Registered. Waiting for approval — we will contact you.",1);
+ if(a.status==="active")return pinStep(a);regStep()}catch(x){$("#go").disabled=false;msg("Could not reach the server. Try again.")}});
+function regStep(){sheet(`<h3>Set up your account</h3><label>Your name</label><input id="n"><label>Gmail</label><input id="e" type="email"><label>Phone number</label><input id="p" type="tel"><label>Create 4-digit PIN (used for purchases)</label><input id="pin" type="password" inputmode="numeric" maxlength="4"><label>Confirm PIN</label><input id="pin2" type="password" inputmode="numeric" maxlength="4"><div class="err" id="err"></div><div class="pair"><button class="btn o" data-x>Cancel</button><button class="btn l" id="reg">Register</button></div>`);
+$("#reg").onclick=async()=>{const v=k=>$("#"+k).value.trim();if(!v("n")||!/^\S+@\S+\.\S+$/.test(v("e"))||!/^\+?\d{10,14}$/.test(v("p")))return msg("Enter your name, a valid Gmail and phone number.");
+if(!/^\d{4}$/.test(v("pin"))||v("pin")!==v("pin2"))return msg("PIN must be 4 digits and match the confirmation.");
+try{await db.collection("accounts").doc(id).update({name:v("n"),email:v("e"),phone:v("p"),pinHash:await sha(id+":"+v("pin")),status:"pending",registeredAt:TS()});
+sheet(`<h3>Registration received</h3><p class="mu">We verify every purchase before activating. Mining starts the moment you are approved. Come back and log in with your code and PIN.</p><button class="btn l" data-x style="margin-top:16px">Done</button>`)}catch(x){msg("Could not register this code. It may already be in use.")}}}
+function pinStep(a){sheet(`<h3>Welcome back${a.name?", "+esc(a.name.split(" ")[0]):""}</h3><label>Enter your PIN</label><input id="pin" type="password" inputmode="numeric" maxlength="4" autofocus><div class="err" id="err"></div><div class="pair"><button class="btn o" data-x>Cancel</button><button class="btn l" id="ent">Log in</button></div>`);
+$("#ent").onclick=async()=>{if(await sha(id+":"+$("#pin").value)!==a.pinHash)return msg("Wrong PIN.");localStorage.setItem("hb_id",id);closeSheet();start()}}
+function forgot(){sheet(`<h3>Request your code</h3><label>Registered Gmail</label><input id="e" type="email"><label>Message</label><textarea id="m" rows="3" placeholder="Tell us what happened"></textarea><div class="err" id="err"></div><div class="pair"><button class="btn o" data-x>Cancel</button><button class="btn l" id="snd">Send</button></div>`);
+$("#snd").onclick=()=>send("forgot_code",$("#e").value.trim(),$("#m").value.trim())}
+function send(type,email,message){if(!/^\S+@\S+\.\S+$/.test(email)||!message)return msg("Enter your email and a message.");
+db.collection("requests").add({type,email,message,createdAt:TS()}).then(()=>{closeSheet();toast("Sent. We will reply by email.")}).catch(()=>msg("Could not send. Try again."))}
+
+/* DASHBOARD */
+function start(){$("#v-land").classList.remove("on");$("#v-dash").classList.add("on");$("#nav").classList.add("on");
+ unsub&&unsub();unsub=db.doc("accounts/"+id).onSnapshot(s=>{acct=s.data();if(!acct||acct.status!=="active")return logout("Your account is not active. Contact support.");$("#uname").textContent=acct.name||"Miner"},()=>{});
+ db.collection("broadcasts").orderBy("createdAt","desc").limit(15).onSnapshot(s=>{bcast=s.docs.map(d=>d.data());badge()},()=>{});loadPrice();draw()}
+function earned(now){const a=acct.activatedAt.toMillis(),u=acct.upgradedAt?acct.upgradedAt.toMillis():null,e1=Math.min(a+30*D,u??Infinity,now);let e=Math.max(0,e1-a)/D*500;if(u&&now>u)e+=(now-u)/D*1000;return e}
+function tick(){if(!acct||!acct.activatedAt)return;const n=Date.now(),a=acct.activatedAt.toMillis(),u=acct.upgradedAt?acct.upgradedAt.toMillis():null,v2=u&&n>u,done=!v2&&n>a+30*D,rate=v2?1000:500,
+ bal=Math.max(0,earned(n)-(acct.spent||0)),f=done?1:((n-(v2?u:a))%D)/D,h=new Date().getHours();
+ $("#greet").textContent=h<12?"Good Morning,":h<17?"Good Afternoon,":"Good Evening,";
+ $("#bal").textContent=ngn(bal);$("#btc").textContent="≈ "+(btcNgn?(bal/btcNgn).toFixed(8):"—")+" BTC";$("#today").textContent="+"+ngn(done?0:rate*f)+" (Today)";
+ $("#rate").textContent="₦"+rate;$("#stat").textContent=done?"Cycle complete":"Mining";$("#earned").textContent=ngn(earned(n));
+ $("#pbar").style.width=(f*100)+"%";$("#ppct").textContent=Math.floor(f*100)+"%";const left=Math.ceil((1-f)*D/6e4);$("#pnote").textContent=done?"Upgrade to continue":"Next credit cycle in "+Math.floor(left/60)+"h "+left%60+"m";
+ $("#banner").innerHTML=done?`<div class="card" style="border-color:var(--lime)"><b>30-day cycle complete</b><p class="mu" style="margin:6px 0 12px">Upgrade to version 2.0.1 for ₦20,000 and mine ₦1,000 every day.</p><button class="btn l" id="upg">Upgrade now</button></div>`:""}
+setInterval(tick,1000);
+$("#banner").addEventListener("click",e=>{if(!e.target.closest("#upg"))return;const ref="UP"+Date.now();
+ PaystackPop.setup({key:PAYSTACK_PK,email:acct.email,amount:2e6,currency:"NGN",ref,metadata:{upgrade:id},callback:r=>{db.collection("upgrades").doc(ref).set({accountId:id,email:acct.email,amount:20000,status:"paid_unverified",createdAt:TS()});toast("Payment received. We will confirm and activate your upgrade.")},onClose(){}}).openIframe()});
+function logout(m){localStorage.removeItem("hb_id");unsub&&unsub();id=acct=null;$("#v-dash").classList.remove("on");$("#nav").classList.remove("on");$("#v-land").classList.add("on");closeSheet();m&&toast(m)}
+/* NAV / MENU / NOTIFICATIONS */
+$$("#nav button").forEach(b=>b.onclick=()=>{$$("#nav button").forEach(x=>x.classList.toggle("on",x===b));const t=b.dataset.t;if(t==="wallet")wallet();else if(t==="mining")$("#mining").scrollIntoView({behavior:"smooth"});else scrollTo({top:0,behavior:"smooth"})});
+function wallet(){const b=$("#bal").textContent;sheet(`<h3>Wallet</h3><div class="card bal" style="margin:0"><small>Your balance</small><h3 id="wb">${b}</h3><p>${$("#btc").textContent}</p></div><p class="mu" style="margin:12px 0">Balance can be spent on airtime, data and Bitcoin. It cannot be withdrawn as cash.</p><div class="act" style="margin:0 0 14px"><button class="a1" data-buy="airtime"><svg class="i"><use href="#phone"/></svg>Airtime</button><button class="a2" data-buy="data"><svg class="i"><use href="#wifi"/></svg>Data</button><button class="a3" data-buy="crypto"><svg class="i"><use href="#btc"/></svg>Bitcoin</button></div><button class="btn o" data-x>Close</button>`);
+ const w=setInterval(()=>{const e=$("#wb");if(!e||!$("#ov").classList.contains("on"))return clearInterval(w);e.textContent=$("#bal").textContent},1000)}
+const seen=()=>+localStorage.getItem("hb_seen")||0;
+function badge(){const n=bcast.filter(b=>b.createdAt&&b.createdAt.toMillis()>seen()).length,d=$("#dot");d.style.display=n?"grid":"none";d.textContent=n}
+$("#bellBtn").onclick=()=>{sheet(`<h3>Notifications</h3>${bcast.length?bcast.map(b=>`<details><summary>${esc(b.title)}</summary><p>${esc(b.message)}</p></details>`).join(""):'<p class="mu">No notifications yet.</p>'}<button class="btn o" data-x style="margin-top:16px">Close</button>`);localStorage.setItem("hb_seen",Date.now());badge()};
+$("#menuBtn").onclick=()=>sheet(`<div class="mi" style="border:0"><div class="logo" style="width:42px;height:42px"><svg class="i"><use href="#user"/></svg></div><div><b>${esc(acct?.name)}</b><div class="mu">${esc(acct?.email)}</div></div></div>
+<button class="mi" data-m="about"><svg class="i"><use href="#info"/></svg>About HashBank</button><button class="mi" data-m="faq"><svg class="i"><use href="#help"/></svg>FAQ</button><button class="mi" data-m="forgot"><svg class="i"><use href="#key"/></svg>Forgot code</button><button class="mi" data-m="switch"><svg class="i"><use href="#swap"/></svg>Login to another account</button><button class="mi" data-m="out" style="border:0"><svg class="i"><use href="#out"/></svg>Log out</button>`);
+document.addEventListener("click",e=>{const m=e.target.closest("[data-m]")?.dataset.m;if(!m)return;
+ if(m==="out"||m==="switch"){logout();if(m==="switch")setTimeout(()=>$("#loginBtn").click(),50)}
+ else if(m==="forgot")forgot();
+ else if(m==="about")sheet(`<h3>About HashBank</h3><p class="mu"><b style="color:var(--tx)">Powering Your Devices. Mining Your Future.</b><br><br>HashBank is a next-generation portable power bank that combines everyday charging with Bitcoin mining.<br><br>It charges your phone and compatible devices, and is designed around a target hash power of 10 TH/s. The projected daily credit is ₦500 per 24 hours, subject to Bitcoin price, network difficulty, pool fees, uptime and operating conditions.<br><br>Charge Smart. Mine Bitcoin. Think Beyond Today.</p><button class="btn o" data-x style="margin-top:16px">Close</button>`);
+ else if(m==="faq")sheet(`<h3>FAQ</h3><details><summary>When does mining start?</summary><p>After we verify your purchase and approve your activation.</p></details><details><summary>Can I withdraw my balance?</summary><p>No. Use it for airtime, data or Bitcoin purchases.</p></details><details><summary>I lost my code.</summary><p>Use Forgot code in the menu.</p></details><label>Ask us a question</label><input id="e" type="email" value="${esc(acct?.email)}"><textarea id="m" rows="3" style="margin-top:8px"></textarea><div class="err" id="err"></div><div class="pair"><button class="btn o" data-x>Cancel</button><button class="btn l" id="snd">Send</button></div>`),
+ $("#snd")&&($("#snd").onclick=()=>send("faq",$("#e").value.trim(),$("#m").value.trim()))});
+/* PURCHASES: balance is only deducted by the server after the provider confirms */
+document.addEventListener("click",e=>{const t=e.target.closest("[data-buy]")?.dataset.buy;if(!t)return;
+ const net='<label>Network</label><select id="net"><option>MTN</option><option>GLO</option><option>AIRTEL</option><option>9MOBILE</option></select>';
+ const f={airtime:net+'<label>Phone number</label><input id="ph" type="tel"><label>Amount (₦)</label><input id="am" type="number" min="50">',
+ data:net+'<label>Phone number</label><input id="ph" type="tel"><label>Data plan</label><select id="plan"><option value="">Plans load from the server</option></select>',
+ crypto:'<label>Amount (₦)</label><input id="am" type="number" min="1000"><div class="mu" id="eq"></div><label>Bitcoin wallet address</label><input id="ad" autocomplete="off">'}[t];
+ sheet(`<h3>Buy ${t==="crypto"?"Bitcoin":t}</h3>${f}<label>Transaction PIN</label><input id="pin" type="password" inputmode="numeric" maxlength="4"><div class="err" id="err"></div><div class="pair"><button class="btn o" data-x>Cancel</button><button class="btn l" id="buy">Buy</button></div>`);
+ $("#am")?.addEventListener("input",()=>{$("#eq")&&($("#eq").textContent=btcNgn?"≈ "+($("#am").value/btcNgn).toFixed(8)+" BTC":"")});
+ $("#buy").onclick=async()=>{const pinHash=await sha(id+":"+$("#pin").value);if(pinHash!==acct.pinHash)return msg("Wrong PIN.");
+ const amt=+($("#am")?.value||0);if(t!=="data"&&amt>Math.max(0,earned(Date.now())-(acct.spent||0)))return msg("Amount is more than your balance.");
+ if(!API_BASE)return msg("Purchases are being switched on. Your balance is safe and nothing was deducted.");
+ $("#buy").disabled=true;msg("Processing… do not close this window.",1);
+ try{const r=await fetch(API_BASE+"/purchase",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({type:t,id,pinHash,network:$("#net")?.value,phone:$("#ph")?.value,plan:$("#plan")?.value,amount:amt,address:$("#ad")?.value})}),j=await r.json();
+ if(j.ok){closeSheet();toast("Purchase successful.")}else{$("#buy").disabled=false;msg(j.error||"Purchase failed. You were not charged.")}}catch(x){$("#buy").disabled=false;msg("No response. Check your transactions before retrying.")}}});
+/* BTC PRICE + CHART */
+let pts=[],days=1;
+async function loadPrice(){try{const p=await (await fetch("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=ngn&include_24hr_change=true")).json();btcNgn=p.bitcoin.ngn;$("#px").textContent="₦"+Math.round(btcNgn).toLocaleString();const c=p.bitcoin.ngn_24h_change||0;$("#chg").textContent=(c>=0?"+":"")+c.toFixed(1)+"% (24h)";$("#chg").style.color=c>=0?"var(--g)":"var(--r)";
+ const m=await (await fetch("https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=ngn&days="+days)).json();pts=m.prices.map(x=>x[1]);$("#pxnote").textContent="";draw()}catch(x){$("#pxnote").textContent="Live price is unavailable right now. Retrying."}}
+$("#rng").onclick=e=>{const b=e.target.closest("button");if(!b)return;$$("#rng button").forEach(x=>x.classList.toggle("on",x===b));days=+b.dataset.d;loadPrice()};setInterval(()=>acct&&loadPrice(),6e4);
+function draw(){const c=$("#cv"),w=c.clientWidth,h=c.clientHeight,r=devicePixelRatio||1;c.width=w*r;c.height=h*r;const x=c.getContext("2d");x.scale(r,r);if(pts.length<2)return;
+ const mn=Math.min(...pts),mx=Math.max(...pts),X=i=>i/(pts.length-1)*w,Y=v=>h-8-(v-mn)/(mx-mn||1)*(h-24);const g=x.createLinearGradient(0,0,0,h);g.addColorStop(0,"rgba(163,230,53,.35)");g.addColorStop(1,"rgba(163,230,53,0)");
+ x.beginPath();pts.forEach((v,i)=>i?x.lineTo(X(i),Y(v)):x.moveTo(X(i),Y(v)));x.strokeStyle="#a3e635";x.lineWidth=2;x.stroke();x.lineTo(w,h);x.lineTo(0,h);x.fillStyle=g;x.fill()}
+addEventListener("resize",draw);
+/* BOOT */
+const saved=localStorage.getItem("hb_id");if(saved){id=saved;db.doc("accounts/"+id).get().then(s=>s.exists&&s.data().status==="active"?pinStep(s.data()):logout()).catch(()=>logout())}
+if("serviceWorker"in navigator)addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
+</script></body></html>
