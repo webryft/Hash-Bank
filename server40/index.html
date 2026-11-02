@@ -25,7 +25,7 @@ label{display:block;color:var(--mu);font-size:12px;margin:10px 0 4px}.g2{display
  <div class="card"><label>Admin email</label><input id="em" type="email" autocomplete="username">
  <div id="step1"><button class="b l" id="next" style="width:100%;margin-top:14px">Continue</button></div>
  <div id="step2" class="hide"><label id="plbl">Password</label><input id="pw" type="password" autocomplete="current-password"><div id="pw2w" class="hide"><label>Confirm password</label><input id="pw2" type="password" autocomplete="new-password"></div>
- <button class="b l" id="go" style="width:100%;margin-top:14px">Log in</button><button class="b" id="reset" style="width:100%;margin-top:8px">Forgot password</button></div>
+ <button class="b l" id="go" style="width:100%;margin-top:14px">Log in</button><button class="b" id="reset" style="width:100%;margin-top:8px">Forgot password</button><button class="b" id="sw" style="width:100%;margin-top:8px"></button></div>
  <div class="err" id="aerr"></div></div></div>
 
 <div id="main" class="hide">
@@ -46,14 +46,19 @@ const toast=m=>{const t=$("#toast");t.textContent=m;t.classList.add("on");clearT
 const aerr=(m,ok)=>{const e=$("#aerr");e.textContent=m;e.className="err"+(ok?" ok":"")};
 let mode="login";
 /* AUTH: only the two admin emails; new accounts must verify their email before access */
-$("#next").onclick=async()=>{const e=$("#em").value.trim().toLowerCase();if(!ADMINS.includes(e))return aerr("This email is not an approved admin.");
- try{const m=await auth.fetchSignInMethodsForEmail(e);mode=m.length?"login":"create"}catch(x){mode="login"}
- $("#step1").classList.add("hide");$("#step2").classList.remove("hide");$("#em").readOnly=true;
- $("#pw2w").classList.toggle("hide",mode==="login");$("#plbl").textContent=mode==="login"?"Password":"Create a password (min 8 characters)";$("#go").textContent=mode==="login"?"Log in":"Create account";aerr("")};
+function setMode(m){mode=m;$("#pw2w").classList.toggle("hide",m==="login");$("#plbl").textContent=m==="login"?"Password":"Create a password (min 8 characters)";$("#go").textContent=m==="login"?"Log in":"Create account";$("#sw").textContent=m==="login"?"First time? Create admin account":"I already have an account";$("#pw").autocomplete=m==="login"?"current-password":"new-password";aerr("")}
+$("#next").onclick=()=>{const e=$("#em").value.trim().toLowerCase();if(!ADMINS.includes(e))return aerr("This email is not an approved admin.");
+ $("#step1").classList.add("hide");$("#step2").classList.remove("hide");$("#em").readOnly=true;setMode("login")};
+$("#sw").onclick=()=>setMode(mode==="login"?"create":"login");
 $("#go").onclick=async()=>{const e=$("#em").value.trim().toLowerCase(),p=$("#pw").value;
  try{if(mode==="create"){if(p.length<8||p!==$("#pw2").value)return aerr("Use at least 8 characters and confirm the password.");
-  const u=await auth.createUserWithEmailAndPassword(e,p);await u.user.sendEmailVerification();await auth.signOut();aerr("Account created. Verify your email from the link we sent, then log in.",1);mode="login";$("#pw2w").classList.add("hide");$("#go").textContent="Log in";return}
-  await auth.signInWithEmailAndPassword(e,p)}catch(x){aerr(x.code==="auth/email-already-in-use"?"Account exists. Log in instead.":"Could not sign in. Check your email and password.")}};
+  const u=await auth.createUserWithEmailAndPassword(e,p);await u.user.sendEmailVerification();await auth.signOut();setMode("login");aerr("Account created. Open the verification link we emailed (check Spam), then log in here.",1);return}
+  await auth.signInWithEmailAndPassword(e,p)}catch(x){
+  if(x.code==="auth/email-already-in-use"){setMode("login");aerr("This account already exists. Enter your password and tap Log in. Use Forgot password if you do not remember it.")}
+  else if(["auth/invalid-credential","auth/wrong-password","auth/user-not-found","auth/invalid-login-credentials"].includes(x.code))aerr("Wrong password, or no account yet. If this is your first time, tap Create admin account.");
+  else if(x.code==="auth/operation-not-allowed")aerr("Turn on Email/Password in Firebase → Authentication → Sign-in method.");
+  else if(x.code==="auth/too-many-requests")aerr("Too many attempts. Wait a few minutes and try again.");
+  else aerr("Could not sign in ("+(x.code||"error")+").")}};
 $("#reset").onclick=()=>auth.sendPasswordResetEmail($("#em").value.trim()).then(()=>aerr("Password reset email sent.",1)).catch(()=>aerr("Could not send reset email."));
 $("#lo").onclick=()=>auth.signOut();
 auth.onAuthStateChanged(async u=>{
