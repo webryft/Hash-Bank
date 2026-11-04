@@ -185,9 +185,38 @@ document.addEventListener("click",e=>{const m=e.target.closest("[data-m]")?.data
  $("#snd")&&($("#snd").onclick=()=>send("faq",$("#e").value.trim(),$("#m").value.trim()))});
 /* PURCHASES: the server checks PIN and balance, calls Peyflex, deducts only on success */
 const NETS=[["mtn","MTN"],["glo","GLO"],["airtel","Airtel"],["9mobile","9mobile"]];
-const api=(p,o)=>fetch(API_BASE+p,o).then(r=>r.json());
+/* TEST MODE: paste your Peyflex token below to call Peyflex straight from this page. Anyone can read it. Remove it before launch. */
+const PEYFLEX_TOKEN="";
+const PX="https://client.peyflex.com.ng/api/",FV=firebase.firestore.FieldValue;
+const px=(p,o={})=>fetch(PX+p,{...o,headers:{Authorization:"Token "+PEYFLEX_TOKEN,"Content-Type":"application/json"}}).then(async r=>({ok:r.ok,j:await r.json().catch(()=>({}))}));
+const arr=j=>Array.isArray(j)?j:(j.networks||j.plans||j.data||[]);
+const nets=j=>arr(j).map(x=>({id:x.identifier||x.id||x.network_id||x.network||x.code,name:x.name||x.label||x.identifier||x.id}));
+const plans=j=>arr(j).map(x=>({code:x.plan_code||x.code||x.id||x.plan,name:x.plan_name||x.name||x.label||x.description||x.plan,amount:+(x.amount||x.price||x.plan_amount||0)}));
+const pstate=j=>{const t=String(j.status||j.Status||j.message||"").toLowerCase();return /success/.test(t)?"success":/pending|process|queue/.test(t)?"pending":"failed"};
+async function api(p,o){
+ if(!PEYFLEX_TOKEN)return fetch(API_BASE+p,o).then(r=>r.json());
+ try{
+  if(p==="/networks"){const r=await px("data/networks/");console.log("Peyflex networks",r);const n=nets(r.j).filter(x=>x.id);return{ok:r.ok&&n.length>0,networks:n}}
+  if(p.startsWith("/plans")){const r=await px("data/plans/?network="+p.split("=")[1]);console.log("Peyflex plans",r);const l=plans(r.j).filter(x=>x.code&&x.amount>0);return{ok:r.ok&&l.length>0,plans:l}}
+  if(p==="/purchase")return await directBuy(JSON.parse(o.body))
+ }catch(e){console.error(e);return{ok:false,error:"Browser could not reach Peyflex (it may block web pages). Details are in the console."}}}
+async function directBuy(b){
+ const ref=db.doc("accounts/"+id),bal=Math.max(0,earned(Date.now())-(acct.spent||0)),ph=String(b.phone||"").replace(/^\+?234/,"0");
+ let amount=Math.round(+b.amount),title,body,path;
+ if(b.type==="airtime"){title=`Airtime · ${String(b.network).toUpperCase()} ${ph}`;path="airtime/topup/";body={network:b.network,amount,mobile_number:ph}}
+ else if(b.type==="data"){const r=await px("data/plans/?network="+encodeURIComponent(b.network)),pl=plans(r.j).find(x=>x.code===b.plan);if(!pl)return{ok:false,error:"That plan is not available."};amount=Math.round(pl.amount);title=`Data · ${pl.name} ${ph}`;path="data/purchase/";body={network:b.network,plan_code:pl.code,mobile_number:ph}}
+ else{if(amount>bal)return{ok:false,error:"Amount is more than your balance."};const tx=ref.collection("tx").doc();
+  await ref.update({spent:FV.increment(amount)});await tx.set({type:"crypto",title:`Bitcoin · ${b.address.slice(0,6)}…${b.address.slice(-4)}`,amount,status:"pending",createdAt:TS()});
+  await db.collection("cryptoQueue").doc(tx.id).set({accountId:id,name:acct.name,email:acct.email,phone:acct.phone,address:b.address,amount,status:"pending",txPath:tx.path,createdAt:TS()});
+  return{ok:true,status:"pending",message:"Your Bitcoin order was received. It is sent to your wallet after we confirm it. Track it in History."}}
+ if(amount>bal)return{ok:false,error:"Amount is more than your balance."};
+ const r=await px(path,{method:"POST",body:JSON.stringify(body)});console.log("Peyflex purchase",r);const st=r.ok?pstate(r.j):"failed";
+ await ref.collection("tx").doc().set({type:b.type,title,amount,status:st,provider:JSON.stringify(r.j).slice(0,400),createdAt:TS()});
+ if(st==="failed")return{ok:false,error:String(r.j.message||r.j.error||r.j.detail||"Peyflex could not complete this. You were not charged.")};
+ await ref.update({spent:FV.increment(amount)});
+ return{ok:true,status:st,message:st==="pending"?"Your order is processing. Check History for the final status.":"Done. "+title+" was sent."}}
 const sc=x=>x==="success"?"var(--g)":x==="pending"?"#f59e0b":"var(--r)";
-function txRow(x){const ic=x.type==="airtime"?"phone":x.type==="data"?"wifi":"i-btc";return `<div class="mi"><div class="logo" style="width:40px;height:40px;background:#16202f;color:var(--lime)"><svg class="i"><use href="#${ic}"/></svg></div><div style="flex:1;min-width:0"><b>${esc(x.title)}</b><div class="mu">${x.createdAt?x.createdAt.toDate().toLocaleString():"Just now"}</div></div><div style="text-align:right"><b>−${ngn(x.amount)}</b><div style="font-size:12px;color:${sc(x.status)}">${x.status==="failed"?"failed · refunded":esc(x.status)}</div></div></div>`}
+function txRow(x){const ic=x.type==="airtime"?"phone":x.type==="data"?"wifi":"i-btc";return `<div class="mi"><div class="logo" style="width:40px;height:40px;background:#16202f;color:var(--lime)"><svg class="i"><use href="#${ic}"/></svg></div><div style="flex:1;min-width:0"><b>${esc(x.title)}</b><div class="mu">${x.createdAt?x.createdAt.toDate().toLocaleString():"Just now"}</div></div><div style="text-align:right"><b>−${ngn(x.amount)}</b><div style="font-size:12px;color:${sc(x.status)}">${x.status==="failed"?"failed · not charged":esc(x.status)}</div></div></div>`}
 function renderTx(){$("#recent").innerHTML=txs.length?txs.slice(0,3).map(txRow).join(""):'<p class="mu" style="padding:12px 0">No transactions yet.</p>'}
 function history(){sheet(`<h3>Transaction history</h3>${txs.length?txs.map(txRow).join(""):'<p class="mu">No transactions yet.</p>'}<button class="btn o" data-x style="margin-top:16px">Close</button>`)}
 $("#allTx").onclick=history;
