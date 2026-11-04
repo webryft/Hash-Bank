@@ -186,7 +186,7 @@ document.addEventListener("click",e=>{const m=e.target.closest("[data-m]")?.data
 /* PURCHASES: the server checks PIN and balance, calls Peyflex, deducts only on success */
 const NETS=[["mtn","MTN"],["glo","GLO"],["airtel","Airtel"],["9mobile","9mobile"]];
 /* TEST MODE: paste your Peyflex token below to call Peyflex straight from this page. Anyone can read it. Remove it before launch. */
-const PEYFLEX_TOKEN="7301f73bfd5cf0fd952fef1fe06d0c99069dfa47";
+const PEYFLEX_TOKEN="4303ba338e37e5b08146bb2f0572e3d7561110aa";
 const PX="https://client.peyflex.com.ng/api/",FV=firebase.firestore.FieldValue;
 const px=(p,o={})=>fetch(PX+p,{...o,headers:{Authorization:"Token "+PEYFLEX_TOKEN,"Content-Type":"application/json"}}).then(async r=>({ok:r.ok,j:await r.json().catch(()=>({}))}));
 const arr=j=>Array.isArray(j)?j:(j.networks||j.plans||j.data||[]);
