@@ -32,7 +32,7 @@ canvas{width:100%;height:170px;display:block;margin-top:10px}.mu{color:var(--mu)
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}.grid2 div{background:#0a101c;border-radius:14px;padding:12px}
 .bar{height:10px;background:#16202f;border-radius:9px;overflow:hidden;margin:10px 0}.bar i{display:block;height:100%;background:var(--lime);width:0;transition:width .9s linear}
 .nav{position:fixed;bottom:0;width:100%;max-width:460px;display:none;justify-content:space-around;background:#0a101c;border-top:1px solid var(--line);padding:8px 0 calc(8px + env(safe-area-inset-bottom))}
-.nav.on{display:flex}.nav button{display:grid;justify-items:center;gap:3px;font-size:12px;color:var(--mu);padding:4px 24px}.nav .on{color:var(--lime)}
+.nav.on{display:flex}.nav button{display:grid;justify-items:center;gap:3px;font-size:12px;color:var(--mu);padding:4px 14px}.nav .on{color:var(--lime)}
 .ov{position:fixed;inset:0;background:#000a;display:none;align-items:flex-end;justify-content:center;z-index:9;opacity:0;transition:opacity .2s}
 .ov.on{display:flex;opacity:1}.sh{width:100%;max-width:460px;max-height:88vh;overflow:auto;background:var(--card);border-radius:24px 24px 0 0;padding:22px 20px calc(22px + env(safe-area-inset-bottom));transform:translateY(30px);transition:transform .25s}.ov.on .sh{transform:none}
 .sh h3{font-size:20px;margin-bottom:14px}label{display:block;font-size:13px;color:var(--mu);margin:12px 0 5px}
@@ -54,7 +54,7 @@ input,select,textarea{width:100%;background:#0a101c;border:1px solid var(--line)
 <symbol id="menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
 <symbol id="phone" viewBox="0 0 24 24"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></symbol>
 <symbol id="wifi" viewBox="0 0 24 24"><path d="M2 9a15 15 0 0 1 20 0M5 12.5a10 10 0 0 1 14 0M8.500 16a5 5 0 0 1 7 0M12 19.500h.01"/></symbol>
-<symbol id="btc" viewBox="0 0 24 24"><path d="M8 4v16M8 5h5a3.500 3.500 0 0 1 0 7H8m5 0a3.500 3.500 0 0 1 0 7H8M11 2v3M11 19v3"/></symbol>
+<symbol id="i-btc" viewBox="0 0 24 24"><path d="M8 4v16M8 5h5a3.500 3.500 0 0 1 0 7H8m5 0a3.500 3.500 0 0 1 0 7H8M11 2v3M11 19v3"/></symbol>
 <symbol id="home" viewBox="0 0 24 24"><path d="m3 11 9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></symbol>
 <symbol id="pick" viewBox="0 0 24 24"><path d="m14 10-9 9M13 4c4-1 7 1 8 5-3-3-6-3-8-1M9 8c-1-3 1-5 4-4"/></symbol>
 <symbol id="wal" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="14" rx="3"/><path d="M3 10V7a2 2 0 0 1 2-2h11M16 14h2"/></symbol>
@@ -63,6 +63,7 @@ input,select,textarea{width:100%;background:#0a101c;border:1px solid var(--line)
 <symbol id="help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.500 9.500a2.500 2.500 0 1 1 3.500 2.300c-.7.400-1 .9-1 1.700M12 17h.01"/></symbol>
 <symbol id="out" viewBox="0 0 24 24"><path d="M10 4H5v16h5M15 8l4 4-4 4M19 12H9"/></symbol>
 <symbol id="swap" viewBox="0 0 24 24"><path d="M4 8h14l-3-3M20 16H6l3 3"/></symbol>
+<symbol id="hist" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
 <symbol id="x" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></symbol>
 </defs></svg>
 <div id="app">
@@ -83,15 +84,16 @@ input,select,textarea{width:100%;background:#0a101c;border:1px solid var(--line)
   <button class="ib" id="menuBtn" aria-label="Menu"><svg class="i"><use href="#menu"/></svg></button></div>
  <div class="card bal"><small>Mining Balance</small><h3 id="bal">₦0.00</h3><p id="btc">≈ 0.00000000 BTC</p><div class="up" id="today">+₦0.00 (Today)</div></div>
  <div id="banner"></div>
- <div class="act"><button class="a1" data-buy="airtime"><svg class="i"><use href="#phone"/></svg>Buy Airtime</button><button class="a2" data-buy="data"><svg class="i"><use href="#wifi"/></svg>Buy Data</button><button class="a3" data-buy="crypto"><svg class="i"><use href="#btc"/></svg>Buy Bitcoin</button></div>
+ <div class="act"><button class="a1" data-buy="airtime"><svg class="i"><use href="#phone"/></svg>Buy Airtime</button><button class="a2" data-buy="data"><svg class="i"><use href="#wifi"/></svg>Buy Data</button><button class="a3" data-buy="crypto"><svg class="i"><use href="#i-btc"/></svg>Buy Bitcoin</button></div>
  <div class="card"><div class="row"><div><b>BTC / NGN</b><div class="mu">Live price</div></div><div class="tabs" id="rng"><button class="on" data-d="1">1D</button><button data-d="7">1W</button><button data-d="30">1M</button><button data-d="90">3M</button><button data-d="365">1Y</button></div></div>
   <div class="row" style="margin-top:8px;justify-content:flex-start"><span class="big" id="px">—</span><span class="up" id="chg" style="margin:0"></span></div><canvas id="cv"></canvas><div class="mu" id="pxnote"></div></div>
  <div class="card" id="mining"><b>Mining Performance</b>
   <div class="grid2"><div><div class="mu">Target hash power</div><div class="big">10 TH/s</div></div><div><div class="mu">Daily credit</div><div class="big" id="rate">₦500</div></div></div>
   <div class="grid2"><div><div class="mu">Status</div><div id="stat">—</div></div><div><div class="mu">Credited so far</div><div id="earned">—</div></div></div></div>
  <div class="card"><b>Your Mining Device</b><div class="row" style="margin-top:12px;align-items:center"><img src="product.png" alt="" style="width:64px;border-radius:12px" onerror="this.remove()"><div style="flex:1"><div class="mu">Mining rewards progress (24h)</div><div class="bar"><i id="pbar"></i></div><div class="mu" id="pnote"></div></div><b id="ppct">0%</b></div></div>
+<div class="card"><div class="row sp"><b>Recent activity</b><button class="mu" id="allTx" style="color:var(--lime)">View all</button></div><div id="recent"></div></div>
 </section>
-<nav class="nav" id="nav"><button class="on" data-t="home"><svg class="i"><use href="#home"/></svg>Home</button><button data-t="mining"><svg class="i"><use href="#pick"/></svg>Mining</button><button data-t="wallet"><svg class="i"><use href="#wal"/></svg>Wallet</button></nav>
+<nav class="nav" id="nav"><button class="on" data-t="home"><svg class="i"><use href="#home"/></svg>Home</button><button data-t="mining"><svg class="i"><use href="#pick"/></svg>Mining</button><button data-t="history"><svg class="i"><use href="#hist"/></svg>History</button><button data-t="wallet"><svg class="i"><use href="#wal"/></svg>Wallet</button></nav>
 </div>
 <div class="ov" id="ov"><div class="sh" id="sh"></div></div><div id="toast"></div>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -100,15 +102,15 @@ input,select,textarea{width:100%;background:#0a101c;border:1px solid var(--line)
 <script>
 const FB={apiKey:"AIzaSyBoNHkEWs978EEV5ue0HM_oVh9dvac14Os",authDomain:"hashbank-b56b4.firebaseapp.com",projectId:"hashbank-b56b4",storageBucket:"hashbank-b56b4.firebasestorage.app",messagingSenderId:"338061059772",appId:"1:338061059772:web:465bf19d612c221678d2b9"};
 const PAYSTACK_PK="pk_live_4ff37d15381d1d12c78fd66f7bc86beb64c59415";
-// Server endpoint (Cloud Function) that holds the Peyflex token. Leave "" until deployed; purchases stay disabled.
-const API_BASE="";
+// Cloud Function that holds the Peyflex token (see functions/index.js).
+const API_BASE="https://us-central1-hashbank-b56b4.cloudfunctions.net/api";
 firebase.initializeApp(FB);const db=firebase.firestore(),TS=firebase.firestore.FieldValue.serverTimestamp;
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)],D=864e5;
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const sha=async t=>[...new Uint8Array(await crypto.subtle.digest("SHA-256",new TextEncoder().encode(t)))].map(b=>b.toString(16).padStart(2,"0")).join("");
 const ngn=n=>"₦"+Number(n).toLocaleString("en-NG",{minimumFractionDigits:2,maximumFractionDigits:2});
 const toast=m=>{const t=$("#toast");t.textContent=m;t.classList.add("on");clearTimeout(t._);t._=setTimeout(()=>t.classList.remove("on"),2600)};
-let id=null,acct=null,unsub=null,btcNgn=0,bcast=[],cfg={price:65000,shipping:10000};
+let id=null,acct=null,unsub=null,txUnsub=null,txs=[],btcNgn=0,bcast=[],cfg={price:65000,shipping:10000};
 function sheet(html){$("#sh").innerHTML=html;$("#ov").classList.add("on")}
 function closeSheet(){$("#ov").classList.remove("on")}
 $("#ov").addEventListener("click",e=>{if(e.target.id==="ov"||e.target.closest("[data-x]"))closeSheet()});
@@ -153,12 +155,12 @@ db.collection("requests").add({type,email,message,createdAt:TS()}).then(()=>{clo
 /* DASHBOARD */
 function start(){$("#v-land").classList.remove("on");$("#v-dash").classList.add("on");$("#nav").classList.add("on");
  unsub&&unsub();unsub=db.doc("accounts/"+id).onSnapshot(s=>{acct=s.data();if(!acct||acct.status!=="active")return logout("Your account is not active. Contact support.");$("#uname").textContent=acct.name||"Miner"},()=>{});
- db.collection("broadcasts").orderBy("createdAt","desc").limit(15).onSnapshot(s=>{bcast=s.docs.map(d=>d.data());badge()},()=>{});loadPrice();draw()}
+ db.collection("broadcasts").orderBy("createdAt","desc").limit(15).onSnapshot(s=>{bcast=s.docs.map(d=>d.data());badge()},()=>{});loadPrice();loadChart();txUnsub&&txUnsub();txUnsub=db.collection("accounts/"+id+"/tx").orderBy("createdAt","desc").limit(50).onSnapshot(s=>{txs=s.docs.map(d=>d.data());renderTx()},()=>{})}
 function earned(now){const a=acct.activatedAt.toMillis(),u=acct.upgradedAt?acct.upgradedAt.toMillis():null,e1=Math.min(a+30*D,u??Infinity,now);let e=Math.max(0,e1-a)/D*500;if(u&&now>u)e+=(now-u)/D*1000;return e}
 function tick(){if(!acct||!acct.activatedAt)return;const n=Date.now(),a=acct.activatedAt.toMillis(),u=acct.upgradedAt?acct.upgradedAt.toMillis():null,v2=u&&n>u,done=!v2&&n>a+30*D,rate=v2?1000:500,
  bal=Math.max(0,earned(n)-(acct.spent||0)),f=done?1:((n-(v2?u:a))%D)/D,h=new Date().getHours();
  $("#greet").textContent=h<12?"Good Morning,":h<17?"Good Afternoon,":"Good Evening,";
- $("#bal").textContent=ngn(bal);$("#btc").textContent="≈ "+(btcNgn?(bal/btcNgn).toFixed(8):"—")+" BTC";$("#today").textContent="+"+ngn(done?0:rate*f)+" (Today)";
+ $("#bal").textContent=ngn(bal);$("#btc").textContent="≈ "+(btcNgn?(bal/btcNgn).toFixed(10):"—")+" BTC";$("#today").textContent="+"+ngn(done?0:rate*f)+" (Today)";
  $("#rate").textContent="₦"+rate;$("#stat").textContent=done?"Cycle complete":"Mining";$("#earned").textContent=ngn(earned(n));
  $("#pbar").style.width=(f*100)+"%";$("#ppct").textContent=Math.floor(f*100)+"%";const left=Math.ceil((1-f)*D/6e4);$("#pnote").textContent=done?"Upgrade to continue":"Next credit cycle in "+Math.floor(left/60)+"h "+left%60+"m";
  $("#banner").innerHTML=done?`<div class="card" style="border-color:var(--lime)"><b>30-day cycle complete</b><p class="mu" style="margin:6px 0 12px">Upgrade to version 2.0.1 for ₦20,000 and mine ₦1,000 every day.</p><button class="btn l" id="upg">Upgrade now</button></div>`:""}
@@ -167,9 +169,9 @@ $("#banner").addEventListener("click",e=>{if(!e.target.closest("#upg"))return;co
  PaystackPop.setup({key:PAYSTACK_PK,email:acct.email,amount:2e6,currency:"NGN",ref,metadata:{upgrade:id},callback:r=>{db.collection("upgrades").doc(ref).set({accountId:id,email:acct.email,amount:20000,status:"paid_unverified",createdAt:TS()});toast("Payment received. We will confirm and activate your upgrade.")},onClose(){}}).openIframe()});
 function logout(m){localStorage.removeItem("hb_id");unsub&&unsub();id=acct=null;$("#v-dash").classList.remove("on");$("#nav").classList.remove("on");$("#v-land").classList.add("on");closeSheet();m&&toast(m)}
 /* NAV / MENU / NOTIFICATIONS */
-$$("#nav button").forEach(b=>b.onclick=()=>{$$("#nav button").forEach(x=>x.classList.toggle("on",x===b));const t=b.dataset.t;if(t==="wallet")wallet();else if(t==="mining")$("#mining").scrollIntoView({behavior:"smooth"});else scrollTo({top:0,behavior:"smooth"})});
-function wallet(){const b=$("#bal").textContent;sheet(`<h3>Wallet</h3><div class="card bal" style="margin:0"><small>Your balance</small><h3 id="wb">${b}</h3><p>${$("#btc").textContent}</p></div><p class="mu" style="margin:12px 0">Balance can be spent on airtime, data and Bitcoin. It cannot be withdrawn as cash.</p><div class="act" style="margin:0 0 14px"><button class="a1" data-buy="airtime"><svg class="i"><use href="#phone"/></svg>Airtime</button><button class="a2" data-buy="data"><svg class="i"><use href="#wifi"/></svg>Data</button><button class="a3" data-buy="crypto"><svg class="i"><use href="#btc"/></svg>Bitcoin</button></div><button class="btn o" data-x>Close</button>`);
- const w=setInterval(()=>{const e=$("#wb");if(!e||!$("#ov").classList.contains("on"))return clearInterval(w);e.textContent=$("#bal").textContent},1000)}
+$$("#nav button").forEach(b=>b.onclick=()=>{$$("#nav button").forEach(x=>x.classList.toggle("on",x===b));const t=b.dataset.t;if(t==="wallet")wallet();else if(t==="history")history();else if(t==="mining")$("#mining").scrollIntoView({behavior:"smooth"});else scrollTo({top:0,behavior:"smooth"})});
+function wallet(){const b=$("#bal").textContent;sheet(`<h3>Wallet</h3><div class="card bal" style="margin:0"><small>Your balance</small><h3 id="wb">${b}</h3><p id="wbtc">${$("#btc").textContent}</p></div><p class="mu" style="margin:12px 0">Balance can be spent on airtime, data and Bitcoin. It cannot be withdrawn as cash.</p><div class="act" style="margin:0 0 14px"><button class="a1" data-buy="airtime"><svg class="i"><use href="#phone"/></svg>Airtime</button><button class="a2" data-buy="data"><svg class="i"><use href="#wifi"/></svg>Data</button><button class="a3" data-buy="crypto"><svg class="i"><use href="#i-btc"/></svg>Bitcoin</button></div><button class="btn o" data-x>Close</button>`);
+ const w=setInterval(()=>{const e=$("#wb");if(!e||!$("#ov").classList.contains("on"))return clearInterval(w);e.textContent=$("#bal").textContent;$("#wbtc").textContent=$("#btc").textContent},1000)}
 const seen=()=>+localStorage.getItem("hb_seen")||0;
 function badge(){const n=bcast.filter(b=>b.createdAt&&b.createdAt.toMillis()>seen()).length,d=$("#dot");d.style.display=n?"grid":"none";d.textContent=n}
 $("#bellBtn").onclick=()=>{sheet(`<h3>Notifications</h3>${bcast.length?bcast.map(b=>`<details><summary>${esc(b.title)}</summary><p>${esc(b.message)}</p></details>`).join(""):'<p class="mu">No notifications yet.</p>'}<button class="btn o" data-x style="margin-top:16px">Close</button>`);localStorage.setItem("hb_seen",Date.now());badge()};
@@ -181,25 +183,40 @@ document.addEventListener("click",e=>{const m=e.target.closest("[data-m]")?.data
  else if(m==="about")sheet(`<h3>About HashBank</h3><p class="mu"><b style="color:var(--tx)">Powering Your Devices. Mining Your Future.</b><br><br>HashBank is a next-generation portable power bank that combines everyday charging with Bitcoin mining.<br><br>It charges your phone and compatible devices, and is designed around a target hash power of 10 TH/s. The projected daily credit is ₦500 per 24 hours, subject to Bitcoin price, network difficulty, pool fees, uptime and operating conditions.<br><br>Charge Smart. Mine Bitcoin. Think Beyond Today.</p><button class="btn o" data-x style="margin-top:16px">Close</button>`);
  else if(m==="faq")sheet(`<h3>FAQ</h3><details><summary>When does mining start?</summary><p>After we verify your purchase and approve your activation.</p></details><details><summary>Can I withdraw my balance?</summary><p>No. Use it for airtime, data or Bitcoin purchases.</p></details><details><summary>I lost my code.</summary><p>Use Forgot code in the menu.</p></details><label>Ask us a question</label><input id="e" type="email" value="${esc(acct?.email)}"><textarea id="m" rows="3" style="margin-top:8px"></textarea><div class="err" id="err"></div><div class="pair"><button class="btn o" data-x>Cancel</button><button class="btn l" id="snd">Send</button></div>`),
  $("#snd")&&($("#snd").onclick=()=>send("faq",$("#e").value.trim(),$("#m").value.trim()))});
-/* PURCHASES: balance is only deducted by the server after the provider confirms */
+/* PURCHASES: the server checks PIN and balance, calls Peyflex, deducts only on success */
+const NETS=[["mtn","MTN"],["glo","GLO"],["airtel","Airtel"],["9mobile","9mobile"]];
+const api=(p,o)=>fetch(API_BASE+p,o).then(r=>r.json());
+const sc=x=>x==="success"?"var(--g)":x==="pending"?"#f59e0b":"var(--r)";
+function txRow(x){const ic=x.type==="airtime"?"phone":x.type==="data"?"wifi":"i-btc";return `<div class="mi"><div class="logo" style="width:40px;height:40px;background:#16202f;color:var(--lime)"><svg class="i"><use href="#${ic}"/></svg></div><div style="flex:1;min-width:0"><b>${esc(x.title)}</b><div class="mu">${x.createdAt?x.createdAt.toDate().toLocaleString():"Just now"}</div></div><div style="text-align:right"><b>−${ngn(x.amount)}</b><div style="font-size:12px;color:${sc(x.status)}">${x.status==="failed"?"failed · refunded":esc(x.status)}</div></div></div>`}
+function renderTx(){$("#recent").innerHTML=txs.length?txs.slice(0,3).map(txRow).join(""):'<p class="mu" style="padding:12px 0">No transactions yet.</p>'}
+function history(){sheet(`<h3>Transaction history</h3>${txs.length?txs.map(txRow).join(""):'<p class="mu">No transactions yet.</p>'}<button class="btn o" data-x style="margin-top:16px">Close</button>`)}
+$("#allTx").onclick=history;
 document.addEventListener("click",e=>{const t=e.target.closest("[data-buy]")?.dataset.buy;if(!t)return;
- const net='<label>Network</label><select id="net"><option>MTN</option><option>GLO</option><option>AIRTEL</option><option>9MOBILE</option></select>';
- const f={airtime:net+'<label>Phone number</label><input id="ph" type="tel"><label>Amount (₦)</label><input id="am" type="number" min="50">',
- data:net+'<label>Phone number</label><input id="ph" type="tel"><label>Data plan</label><select id="plan"><option value="">Plans load from the server</option></select>',
- crypto:'<label>Amount (₦)</label><input id="am" type="number" min="1000"><div class="mu" id="eq"></div><label>Bitcoin wallet address</label><input id="ad" autocomplete="off">'}[t];
+ const f={airtime:'<label>Network</label><select id="net">'+NETS.map(n=>`<option value="${n[0]}">${n[1]}</option>`).join("")+'</select><label>Phone number</label><input id="ph" type="tel" placeholder="080..."><label>Amount (₦)</label><input id="am" type="number" min="50" inputmode="numeric">',
+ data:'<label>Network</label><select id="net"><option value="">Loading networks…</option></select><label>Phone number</label><input id="ph" type="tel" placeholder="080..."><label>Data plan</label><select id="plan"><option value="">Choose a network first</option></select>',
+ crypto:'<label>Amount (₦)</label><input id="am" type="number" min="1000" inputmode="numeric"><div class="mu" id="eq"></div><label>Bitcoin wallet address</label><input id="ad" autocomplete="off" spellcheck="false">'}[t];
  sheet(`<h3>Buy ${t==="crypto"?"Bitcoin":t}</h3>${f}<label>Transaction PIN</label><input id="pin" type="password" inputmode="numeric" maxlength="4"><div class="err" id="err"></div><div class="pair"><button class="btn o" data-x>Cancel</button><button class="btn l" id="buy">Buy</button></div>`);
  $("#am")?.addEventListener("input",()=>{$("#eq")&&($("#eq").textContent=btcNgn?"≈ "+($("#am").value/btcNgn).toFixed(8)+" BTC":"")});
+ if(t==="data"){api("/networks").then(j=>{if(!j.ok||!j.networks.length)throw 0;$("#net").innerHTML='<option value="">Select network</option>'+j.networks.map(n=>`<option value="${esc(n.id)}">${esc(n.name)}</option>`).join("")}).catch(()=>{$("#net").innerHTML='<option value="">Could not load</option>';msg("Could not load networks. Close and try again.")});
+  $("#net").onchange=()=>{const n=$("#net").value,p=$("#plan");if(!n)return;p.innerHTML='<option value="">Loading plans…</option>';msg("");
+   api("/plans?network="+encodeURIComponent(n)).then(j=>{if(!j.ok||!j.plans.length)throw 0;p.innerHTML='<option value="">Select a plan</option>'+j.plans.map(x=>`<option value="${esc(x.code)}" data-a="${x.amount}">${esc(x.name)} — ${ngn(x.amount)}</option>`).join("")}).catch(()=>{p.innerHTML='<option value="">No plans available</option>';msg("Could not load plans for this network.")})}}
  $("#buy").onclick=async()=>{const pinHash=await sha(id+":"+$("#pin").value);if(pinHash!==acct.pinHash)return msg("Wrong PIN.");
- const amt=+($("#am")?.value||0);if(t!=="data"&&amt>Math.max(0,earned(Date.now())-(acct.spent||0)))return msg("Amount is more than your balance.");
- if(!API_BASE)return msg("Purchases are being switched on. Your balance is safe and nothing was deducted.");
- $("#buy").disabled=true;msg("Processing… do not close this window.",1);
- try{const r=await fetch(API_BASE+"/purchase",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({type:t,id,pinHash,network:$("#net")?.value,phone:$("#ph")?.value,plan:$("#plan")?.value,amount:amt,address:$("#ad")?.value})}),j=await r.json();
- if(j.ok){closeSheet();toast("Purchase successful.")}else{$("#buy").disabled=false;msg(j.error||"Purchase failed. You were not charged.")}}catch(x){$("#buy").disabled=false;msg("No response. Check your transactions before retrying.")}}});
+  const po=$("#plan")?.selectedOptions[0],amt=t==="data"?+(po?.dataset.a||0):+($("#am").value||0),ph=$("#ph")?.value.trim(),ad=$("#ad")?.value.trim();
+  if(t!=="crypto"&&!/^(\+?234|0)\d{10}$/.test(ph||""))return msg("Enter a valid phone number.");
+  if(t==="data"&&!$("#plan").value)return msg("Choose a data plan.");
+  if(t==="airtime"&&(amt<50||amt>50000))return msg("Airtime must be ₦50 to ₦50,000.");
+  if(t==="crypto"&&(amt<1000||!/^(bc1|[13])[a-zA-HJ-NP-Z0-9]{25,62}$/.test(ad||"")))return msg("Minimum ₦1,000 and a valid Bitcoin address.");
+  if(amt>Math.max(0,earned(Date.now())-(acct.spent||0)))return msg("Amount is more than your balance.");
+  $("#buy").disabled=true;msg("Processing… do not close this window.",1);
+  try{const j=await api("/purchase",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({type:t,id,pinHash,network:$("#net")?.value,phone:ph,plan:$("#plan")?.value,amount:amt,address:ad})});
+   if(j.ok){sheet(`<h3>${j.status==="pending"?"Order received":"Successful"}</h3><p class="mu">${esc(j.message)}</p><button class="btn l" data-x style="margin-top:16px">Done</button>`)}else{$("#buy").disabled=false;msg(j.error||"Purchase failed. You were not charged.")}}
+  catch(x){$("#buy").disabled=false;msg("No response. Check History before trying again.")}}});
 /* BTC PRICE + CHART */
 let pts=[],days=1;
-async function loadPrice(){try{const p=await (await fetch("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=ngn&include_24hr_change=true")).json();btcNgn=p.bitcoin.ngn;$("#px").textContent="₦"+Math.round(btcNgn).toLocaleString();const c=p.bitcoin.ngn_24h_change||0;$("#chg").textContent=(c>=0?"+":"")+c.toFixed(1)+"% (24h)";$("#chg").style.color=c>=0?"var(--g)":"var(--r)";
- const m=await (await fetch("https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=ngn&days="+days)).json();pts=m.prices.map(x=>x[1]);$("#pxnote").textContent="";draw()}catch(x){$("#pxnote").textContent="Live price is unavailable right now. Retrying."}}
-$("#rng").onclick=e=>{const b=e.target.closest("button");if(!b)return;$$("#rng button").forEach(x=>x.classList.toggle("on",x===b));days=+b.dataset.d;loadPrice()};setInterval(()=>acct&&loadPrice(),6e4);
+const cp=+localStorage.getItem("hb_px")||0;if(cp)btcNgn=cp;
+async function loadPrice(){try{const p=await (await fetch("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=ngn&include_24hr_change=true")).json();btcNgn=p.bitcoin.ngn;localStorage.setItem("hb_px",btcNgn);$("#px").textContent="₦"+Math.round(btcNgn).toLocaleString();const c=p.bitcoin.ngn_24h_change||0;$("#chg").textContent=(c>=0?"+":"")+c.toFixed(1)+"% (24h)";$("#chg").style.color=c>=0?"var(--g)":"var(--r)";$("#pxnote").textContent=""}catch(x){if(btcNgn)$("#px").textContent="₦"+Math.round(btcNgn).toLocaleString();$("#pxnote").textContent="Live price delayed. Showing last known price."}}
+async function loadChart(){try{const m=await (await fetch("https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=ngn&days="+days)).json();pts=m.prices.map(x=>x[1]);draw()}catch(x){}}
+$("#rng").onclick=e=>{const b=e.target.closest("button");if(!b)return;$$("#rng button").forEach(x=>x.classList.toggle("on",x===b));days=+b.dataset.d;loadChart()};setInterval(()=>acct&&loadPrice(),6e4);setInterval(()=>acct&&loadChart(),3e5);
 function draw(){const c=$("#cv"),w=c.clientWidth,h=c.clientHeight,r=devicePixelRatio||1;c.width=w*r;c.height=h*r;const x=c.getContext("2d");x.scale(r,r);if(pts.length<2)return;
  const mn=Math.min(...pts),mx=Math.max(...pts),X=i=>i/(pts.length-1)*w,Y=v=>h-8-(v-mn)/(mx-mn||1)*(h-24);const g=x.createLinearGradient(0,0,0,h);g.addColorStop(0,"rgba(163,230,53,.35)");g.addColorStop(1,"rgba(163,230,53,0)");
  x.beginPath();pts.forEach((v,i)=>i?x.lineTo(X(i),Y(v)):x.moveTo(X(i),Y(v)));x.strokeStyle="#a3e635";x.lineWidth=2;x.stroke();x.lineTo(w,h);x.lineTo(0,h);x.fillStyle=g;x.fill()}
